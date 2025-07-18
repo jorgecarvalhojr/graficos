@@ -17,6 +17,7 @@ CSV_URLS = [
 
 @st.cache_data
 def carregar_dados_ate_corte():
+
     df = None
     for url in CSV_URLS:
         try:
@@ -32,6 +33,7 @@ def carregar_dados_ate_corte():
     if df is None:
         st.error("Nenhuma das URLs pôde ser carregada.")
         return pd.DataFrame()
+
     df['data_solicitacao'] = pd.to_datetime(df['data_solicitacao'], errors='coerce')
     df['ano'] = df['data_solicitacao'].dt.year
     df['ocorrencia'] = df['ocorrencia'].fillna('Não Informada')
@@ -40,18 +42,15 @@ def carregar_dados_ate_corte():
 
 @st.cache_data(ttl=600)
 def carregar_dados_atuais():
+
     df = None
     for url in CSV_URLS:
-        try:
         try:
             import io
             import requests
             headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv"}
             response = requests.get(url, headers=headers, timeout=10)
             df = pd.read_csv(io.StringIO(response.text), encoding='latin1')
-        except Exception as e:
-            st.warning(f"Falha ao ler {url}: {e}")
-            continue
             break
         except Exception as e:
             st.warning(f"Falha ao ler {url}: {e}")
@@ -59,6 +58,7 @@ def carregar_dados_atuais():
     if df is None:
         st.error("Nenhuma das URLs pôde ser carregada.")
         return pd.DataFrame()
+
     df['data_solicitacao'] = pd.to_datetime(df['data_solicitacao'], errors='coerce')
     df['ano'] = df['data_solicitacao'].dt.year
     df['ocorrencia'] = df['ocorrencia'].fillna('Não Informada')
