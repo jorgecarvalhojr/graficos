@@ -41,6 +41,9 @@ def carregar_dados():
         df['municipio'] = df['municipio'].str.upper().str.strip()
         df['ocorrencia'] = df['ocorrencia'].fillna('NÃO INFORMADA')
         df['redec'] = df['redec'].fillna('NÃO INFORMADA')
+        
+        # Associar municípios específicos à REDEC 02 - Baixada Fluminense
+        df.loc[df['municipio'].isin(['DUQUE DE CAXIAS', 'NOVA IGUAÇU']), 'redec'] = 'REDEC 02 - Baixada Fluminense'
         return df
     return pd.DataFrame()
 
@@ -111,19 +114,21 @@ with col_dir:
 st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
 freq_atual['municipio_original'] = freq_atual['municipio'].str.title()
 
-fig_map = px.choropleth(
+fig_map = px.choropleth_mapbox(
     freq_atual,
     geojson=geojson,
     locations='municipio_original',
     featureidkey="properties.NM_MUN",
     color='frequencia',
     color_continuous_scale="YlOrRd",
-    scope='south america',
+    mapbox_style="carto-positron",
+    zoom=7,
+    opacity=0.6,
+    center={"lat": -22.9, "lon": -43.2},
     hover_name='municipio_original',
     hover_data=['frequencia']
 )
 
-fig_map.update_geos(fitbounds="locations", visible=False)
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
