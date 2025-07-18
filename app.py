@@ -62,8 +62,7 @@ if df.empty:
 # ----------- Botão para limpar cache -----------
 if st.sidebar.button('🔄 Forçar Limpeza Completa Cache'):
     st.cache_data.clear()
-    st.experimental_rerun()
-
+    st.rerun()
 # ----------- Filtros -----------
 anos = ['TODOS'] + sorted(df['ano'].dropna().unique().tolist())
 ocorrencias = ['TODAS'] + sorted(df['ocorrencia'].unique())
@@ -116,12 +115,14 @@ fig_map = px.choropleth_map(
     color_continuous_scale="YlOrRd",
     scope='south america',
     hover_name='municipio_original',
-    hover_data={'frequencia': True}
+    hover_data=['frequencia']
 )
 
 fig_map.update_geos(fitbounds="locations", visible=False)
+
 fig_map.update_traces(
     hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>'
 )
 
+st.plotly_chart(fig_map, use_container_width=True)
 st.plotly_chart(fig_map, use_container_width=True)
