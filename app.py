@@ -115,7 +115,6 @@ fig_map = px.choropleth_map(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     scope='south america',
-    center={"lat": -22.9, "lon": -43.2},
     hover_name='municipio_original',
     hover_data={'frequencia': True}
 )
@@ -124,4 +123,5 @@ fig_map.update_geos(fitbounds="locations", visible=False)
 fig_map.update_traces(
     hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>'
 )
+
 st.plotly_chart(fig_map, use_container_width=True)
