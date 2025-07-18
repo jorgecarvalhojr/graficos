@@ -68,7 +68,7 @@ redec_sel = col3.selectbox("Filtrar por REDEC", redec_opts)
 df_filtrado = df.copy()
 if ano_sel != 'TODOS':
     df_filtrado = df_filtrado[df_filtrado['ano'] == ano_sel]
-if ocur_sel != 'TODAS':
+if 'ocur_sel' in locals() and ocur_sel != 'TODAS':
     df_filtrado = df_filtrado[df_filtrado['ocorrencia'] == ocur_sel]
 if redec_sel != 'TODAS':
     df_filtrado = df_filtrado[df_filtrado['redec'] == redec_sel]
@@ -91,7 +91,7 @@ with col_dir:
     df_ultimos = df_ultimos.copy()
     if ano_sel != 'TODOS':
         df_ultimos = df_ultimos[df_ultimos['ano'] == ano_sel]
-    if ocur_sel != 'TODAS':
+    if 'ocur_sel' in locals() and ocur_sel != 'TODAS':
         df_ultimos = df_ultimos[df_ultimos['ocorrencia'] == ocur_sel]
     if redec_sel != 'TODAS':
         df_ultimos = df_ultimos[df_ultimos['redec'] == redec_sel]
@@ -126,3 +126,6 @@ fig_map = px.choropleth_mapbox(
 )
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 st.plotly_chart(fig_map, use_container_width=True)
+ocorrencias = ['TODAS'] + sorted(df['ocorrencia'].dropna().unique())
+ocur_sel = st.selectbox('Filtrar por Ocorrência', ocorrencias)
+
