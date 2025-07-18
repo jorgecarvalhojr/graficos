@@ -88,7 +88,7 @@ with col2:
 
 # Carregar GeoJSON local
 try:
-    with open("/mnt/data/RJ_Municipios_2024.json", "r", encoding="utf-8") as f:
+    with open("RJ_Municipios_2024.json", "r", encoding="utf-8") as f:
         geojson_data = json.load(f)
 except Exception as e:
     st.error(f"Erro ao carregar GeoJSON local: {e}")
