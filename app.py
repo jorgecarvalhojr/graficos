@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import requests
@@ -19,15 +20,19 @@ def carregar_dados():
     frames = []
     for url in URLS:
         try:
-            r = requests.get(url, verify=False)
+            r = requests.get(url, verify=False, timeout=10)
             if r.status_code == 200:
                 df = pd.read_csv(StringIO(r.text), sep=",")
                 frames.append(df)
+            else:
+                st.warning(f"⚠️ Erro {r.status_code} ao acessar {url}")
         except Exception as e:
-            st.warning(f"Erro ao carregar {url}: {e}")
+            st.warning(f"❌ Falha ao carregar {url}: {e}")
+
     if not frames:
         st.error("❌ Nenhum dado foi carregado.")
         return pd.DataFrame()
+
     df_total = pd.concat(frames, ignore_index=True)
     df_total["data_solicitacao"] = pd.to_datetime(df_total["data_solicitacao"], errors="coerce")
     df_total["ano"] = df_total["data_solicitacao"].dt.year
@@ -82,25 +87,30 @@ with col2:
 
 # Carregar GeoJSON
 geojson_url = "https://rj-mapas.s3.amazonaws.com/geojson_rj_municipios_ok.json"
-geojson_data = requests.get(geojson_url).json()
+try:
+    geojson_data = requests.get(geojson_url, timeout=10).json()
+except Exception as e:
+    st.error(f"Erro ao carregar GeoJSON: {e}")
+    geojson_data = None
 
 # Mapa
-st.subheader("🗺️ Mapa de Frequência de BOs por Município (RJ)")
-df_mapa = df_filtrado["MUNICIPIO"].value_counts().reset_index()
-df_mapa.columns = ["MUNICIPIO", "FREQUENCIA"]
+if geojson_data:
+    st.subheader("🗺️ Mapa de Frequência de BOs por Município (RJ)")
+    df_mapa = df_filtrado["MUNICIPIO"].value_counts().reset_index()
+    df_mapa.columns = ["MUNICIPIO", "FREQUENCIA"]
 
-fig_mapa = px.choropleth_mapbox(
-    df_mapa,
-    geojson=geojson_data,
-    locations="MUNICIPIO",
-    featureidkey="properties.name",
-    color="FREQUENCIA",
-    color_continuous_scale="Reds",
-    mapbox_style="carto-positron",
-    zoom=6,
-    center={"lat": -22.9, "lon": -43.3},
-    opacity=0.7,
-    title="Frequência de BOs por Município (RJ)"
-)
+    fig_mapa = px.choropleth_mapbox(
+        df_mapa,
+        geojson=geojson_data,
+        locations="MUNICIPIO",
+        featureidkey="properties.name",
+        color="FREQUENCIA",
+        color_continuous_scale="Reds",
+        mapbox_style="carto-positron",
+        zoom=6,
+        center={"lat": -22.9, "lon": -43.3},
+        opacity=0.7,
+        title="Frequência de BOs por Município (RJ)"
+    )
 
-st.plotly_chart(fig_mapa, use_container_width=True)
+    st.plotly_chart(fig_mapa, use_container_width=True)
