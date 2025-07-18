@@ -17,10 +17,11 @@ URLS = [
 
 @st.cache_data(ttl=600)
 def carregar_dados():
+    headers = {"User-Agent": "Mozilla/5.0"}
     frames = []
     for url in URLS:
         try:
-            r = requests.get(url, verify=False, timeout=10)
+            r = requests.get(url, headers=headers, verify=False, timeout=10)
             if r.status_code == 200:
                 df = pd.read_csv(StringIO(r.text), sep=",")
                 frames.append(df)
@@ -85,12 +86,12 @@ with col2:
     fig2 = px.bar(atualizado, x="MUNICIPIO", y="FREQUENCIA", title="Dados Atualizados")
     st.plotly_chart(fig2, use_container_width=True)
 
-# Carregar GeoJSON
-geojson_url = "https://rj-mapas.s3.amazonaws.com/geojson_rj_municipios_ok.json"
+# Carregar GeoJSON local
 try:
-    geojson_data = requests.get(geojson_url, timeout=10).json()
+    with open("/mnt/data/RJ_Municipios_2024.json", "r", encoding="utf-8") as f:
+        geojson_data = json.load(f)
 except Exception as e:
-    st.error(f"Erro ao carregar GeoJSON: {e}")
+    st.error(f"Erro ao carregar GeoJSON local: {e}")
     geojson_data = None
 
 # Mapa
