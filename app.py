@@ -21,13 +21,13 @@ def carregar_dados():
         try:
             headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv"}
             response = requests.get(url, headers=headers, timeout=10, verify=False)
-            df = pd.read_csv(io.StringIO(response.text), encoding='latin1')
+            response.encoding = "latin1"
+            df = pd.read_csv(io.StringIO(response.text))
             dfs.append(df)
         except Exception as e:
-            st.warning(f"Falha ao ler {url}: {e}")
-            continue
+            st.warning(f"⚠️ Falha ao acessar {url}: {e}")
     if not dfs:
-        st.error("⚠️ Nenhum dado pôde ser carregado de nenhuma URL.")
+        st.error("❌ Nenhum dado pôde ser carregado.")
         return pd.DataFrame()
     df = pd.concat(dfs, ignore_index=True)
     df['data_solicitacao'] = pd.to_datetime(df['data_solicitacao'], errors='coerce')
