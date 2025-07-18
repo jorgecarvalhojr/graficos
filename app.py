@@ -68,8 +68,8 @@ redec_sel = col3.selectbox("Filtrar por REDEC", redec_opts)
 df_filtrado = df.copy()
 if ano_sel != 'TODOS':
     df_filtrado = df_filtrado[df_filtrado['ano'] == ano_sel]
-if ocur_sel != 'TODAS':
-    df_filtrado = df_filtrado[df_filtrado['ocorrencia'] == ocur_sel]
+if ocor_sel != 'TODAS':
+    df_filtrado = df_filtrado[df_filtrado['ocorrencia'] == ocor_sel]
 if redec_sel != 'TODAS':
     df_filtrado = df_filtrado[df_filtrado['redec'] == redec_sel]
 
@@ -91,8 +91,8 @@ with col_dir:
     df_ultimos = df_ultimos.copy()
     if ano_sel != 'TODOS':
         df_ultimos = df_ultimos[df_ultimos['ano'] == ano_sel]
-    if ocur_sel != 'TODAS':
-        df_ultimos = df_ultimos[df_ultimos['ocorrencia'] == ocur_sel]
+    if ocor_sel != 'TODAS':
+        df_ultimos = df_ultimos[df_ultimos['ocorrencia'] == ocor_sel]
     if redec_sel != 'TODAS':
         df_ultimos = df_ultimos[df_ultimos['redec'] == redec_sel]
     freq_ultimos = df_ultimos['municipio'].value_counts().reset_index()
