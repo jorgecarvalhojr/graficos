@@ -11,7 +11,7 @@ st.title("📊 Frequência de BO por Município (RJ)")
 # ----------- Função para carregar dados de arquivos locais atualizados a cada 10 min -----------
 @st.cache_data(ttl=600)
 def carregar_dados():
-    arquivos = ["prodec1.csv", "prodec2.csv"]  # Baixados previamente por cronjob
+    arquivos = ["prodec1.csv", "prodec2.csv"]  # Devem ser carregados no deploy do Streamlit Cloud manualmente
     frames = []
     for arq in arquivos:
         path = os.path.join(os.path.dirname(__file__), arq)
@@ -59,25 +59,25 @@ ano_sel = col1.selectbox("Filtrar por Ano", anos)
 ocur_sel = col2.selectbox("Filtrar por Ocorrência", ocorrencias)
 redec_sel = col3.selectbox("Filtrar por REDEC", redec_opts)
 
-# ----------- Gráfico 1: Acumulado até 18/07/2024 -----------
+# ----------- Gráfico 1: Acumulado até 18/07/2025 -----------
 with st.columns(2)[0]:
-    st.subheader("📌 Gráfico Acumulado (até 18/07/2024)")
-    df_ate_2024 = df[df['data_solicitacao'] <= pd.to_datetime("2024-07-18")].copy()
+    st.subheader("📌 Gráfico Acumulado (até 18/07/2025)")
+    df_ate_2025 = df[df['data_solicitacao'] <= pd.to_datetime("2025-07-18")].copy()
     if ano_sel != 'TODOS':
-        df_ate_2024 = df_ate_2024[df_ate_2024['ano'] == ano_sel]
+        df_ate_2025 = df_ate_2025[df_ate_2025['ano'] == ano_sel]
     if ocur_sel != 'TODAS':
-        df_ate_2024 = df_ate_2024[df_ate_2024['ocorrencia'] == ocur_sel]
+        df_ate_2025 = df_ate_2025[df_ate_2025['ocorrencia'] == ocur_sel]
     if redec_sel != 'TODAS':
-        df_ate_2024 = df_ate_2024[df_ate_2024['redec'] == redec_sel]
-    freq_ate_2024 = df_ate_2024['municipio'].value_counts().reset_index()
-    freq_ate_2024.columns = ['municipio', 'frequencia']
-    fig1 = px.bar(freq_ate_2024, x='municipio', y='frequencia',
-                  title="BOs até 18/07/2024",
+        df_ate_2025 = df_ate_2025[df_ate_2025['redec'] == redec_sel]
+    freq_ate_2025 = df_ate_2025['municipio'].value_counts().reset_index()
+    freq_ate_2025.columns = ['municipio', 'frequencia']
+    fig1 = px.bar(freq_ate_2025, x='municipio', y='frequencia',
+                  title="BOs até 18/07/2025",
                   hover_data=['municipio', 'frequencia'])
     fig1.update_traces(hovertemplate='Município: %{x}<br>Frequência: %{y}')
     st.plotly_chart(fig1, use_container_width=True)
 
-# ----------- Gráfico 2: Acumulado com atualizações -----------
+# ----------- Gráfico 2: Acumulado com atualização -----------
 with st.columns(2)[1]:
     st.subheader("🛁 Gráfico Acumulado (com atualização)")
     df_acumulado = df.copy()
@@ -99,18 +99,24 @@ with st.columns(2)[1]:
 st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
 geo_ids = []
 valores = []
+labels = []
+
 for feature in geojson['features']:
     nome_mun = feature['properties'].get('NM_MUN', '').upper().strip()
-    geo_ids.append(feature['properties']['CD_MUN'])
+    cod_mun = feature['properties']['CD_MUN']
     freq = freq_acumulado.set_index('municipio').get('frequencia').get(nome_mun, 0)
-    valores.append(freq)
     feature['properties']['frequencia'] = freq
+    feature['properties']['hover'] = f"{nome_mun}<br>Frequência: {freq}"
+    geo_ids.append(cod_mun)
+    valores.append(freq)
+    labels.append(feature['properties']['hover'])
 
 fig_map = px.choropleth_mapbox(
     geojson=geojson,
     locations=geo_ids,
     featureidkey="properties.CD_MUN",
     color=valores,
+    hover_name=labels,
     color_continuous_scale="YlOrRd",
     mapbox_style="carto-positron",
     center={"lat": -22.9, "lon": -43.2},
