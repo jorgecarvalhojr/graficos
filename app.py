@@ -7,6 +7,12 @@ import plotly.express as px
 from datetime import datetime
 from io import StringIO
 
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+}
+
+response = requests.get(url, headers=headers, timeout=10)
+
 st.set_page_config(layout="wide")
 st.title("📊 Análise de Frequência de BOs por Município (RJ)")
 
