@@ -6,16 +6,6 @@ import json
 from datetime import datetime
 from datetime import timedelta
 
-try:
-    import io
-    import requests
-    headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv"}
-    response = requests.get(url, headers=headers, timeout=10)
-    df = pd.read_csv(io.StringIO(response.text), encoding='latin1')
-except Exception as e:
-    st.warning(f"Falha ao ler {url}: {e}")
-    continue
-
 st.set_page_config(layout="wide", page_title="Análise de BOs - PRODEC")
 
 # --- Parâmetros globais ---
@@ -30,11 +20,15 @@ def carregar_dados_ate_corte():
     df = None
     for url in CSV_URLS:
         try:
-            import io
+            try:
+        import io
         import requests
         headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv"}
         response = requests.get(url, headers=headers, timeout=10)
         df = pd.read_csv(io.StringIO(response.text), encoding='latin1')
+    except Exception as e:
+        st.warning(f"Falha ao ler {url}: {e}")
+        continue
             break
         except Exception as e:
             st.warning(f"Falha ao ler {url}: {e}")
@@ -53,11 +47,15 @@ def carregar_dados_atuais():
     df = None
     for url in CSV_URLS:
         try:
-            import io
+            try:
+        import io
         import requests
         headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv"}
         response = requests.get(url, headers=headers, timeout=10)
         df = pd.read_csv(io.StringIO(response.text), encoding='latin1')
+    except Exception as e:
+        st.warning(f"Falha ao ler {url}: {e}")
+        continue
             break
         except Exception as e:
             st.warning(f"Falha ao ler {url}: {e}")
