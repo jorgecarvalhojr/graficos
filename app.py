@@ -88,6 +88,8 @@ with col_esq:
     df_fixo = df_filtrado[df_filtrado['data_solicitacao'] <= pd.to_datetime("2025-07-18")].copy()
     freq_fixo = df_fixo['municipio'].value_counts().reset_index()
     freq_fixo.columns = ['municipio', 'frequencia']
+    total_fixo = freq_fixo['frequencia'].sum()
+    st.markdown(f"**Total de BOs até 18/07/2025: {total_fixo}**")
     fig1 = px.bar(freq_fixo, x='municipio', y='frequencia',
                   title="BOs acumulados até 18/07/2025",
                   hover_data=['municipio', 'frequencia'])
@@ -98,6 +100,8 @@ with col_dir:
     st.subheader("📡 Gráfico com Atualização Automática (a cada 10 min)")
     freq_atual = df_filtrado['municipio'].value_counts().reset_index()
     freq_atual.columns = ['municipio', 'frequencia']
+    total_atual = freq_atual['frequencia'].sum()
+    st.markdown(f"**Total de BOs atualizados: {total_atual}**")
     fig2 = px.bar(freq_atual, x='municipio', y='frequencia',
                   title="BOs acumulados (dados atualizados)",
                   hover_data=['municipio', 'frequencia'])
@@ -107,21 +111,19 @@ with col_dir:
 st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
 freq_atual['municipio_original'] = freq_atual['municipio'].str.title()
 
-fig_map = px.choropleth_mapbox(
+fig_map = px.choropleth(
     freq_atual,
     geojson=geojson,
     locations='municipio_original',
     featureidkey="properties.NM_MUN",
     color='frequencia',
     color_continuous_scale="YlOrRd",
-    mapbox_style="carto-positron",
-    zoom=7.5,
-    opacity=0.7,
-    center={"lat": -22.9, "lon": -43.2},
+    scope='south america',
     hover_name='municipio_original',
     hover_data=['frequencia']
 )
 
+fig_map.update_geos(fitbounds="locations", visible=False)
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
