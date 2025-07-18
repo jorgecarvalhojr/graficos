@@ -23,8 +23,11 @@ URLS = [
 
 @st.cache_data(ttl=600)
 def carregar_dados():
-    headers = {"User-Agent": "Mozilla/5.0"}
     frames = []
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+
     for url in URLS:
         try:
             r = requests.get(url, headers=headers, verify=False, timeout=10)
