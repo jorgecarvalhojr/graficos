@@ -9,7 +9,7 @@ import os
 st.set_page_config(layout="wide")
 st.title("📊 Frequência de BO por Município (RJ)")
 
-# ----------- Função para carregar dados das URLs -----------
+# ----------- Função aprimorada para carregar dados das URLs -----------
 @st.cache_data(ttl=600)
 def carregar_dados():
     urls = [
@@ -17,10 +17,15 @@ def carregar_dados():
         "https://pronadec.sistematica.info/prodec.csv"
     ]
     frames = []
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+        "Accept": "text/csv,*/*;q=0.9",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Connection": "keep-alive",
+    }
     for url in urls:
         try:
-            response = requests.get(url, headers=headers, timeout=10, verify=False)
+            response = requests.get(url, headers=headers, timeout=15, verify=False)
             if response.status_code == 200:
                 df = pd.read_csv(StringIO(response.text))
                 frames.append(df)
@@ -54,6 +59,11 @@ if df.empty:
     st.error("❌ Não foi possível carregar dados.")
     st.stop()
 
+# ----------- Botão para limpar cache -----------
+if st.sidebar.button('🔄 Forçar Limpeza Completa Cache'):
+    st.cache_data.clear()
+    st.experimental_rerun()
+
 # ----------- Filtros -----------
 anos = ['TODOS'] + sorted(df['ano'].dropna().unique().tolist())
 ocorrencias = ['TODAS'] + sorted(df['ocorrencia'].unique())
@@ -86,42 +96,32 @@ with col_esq:
 # ----------- Gráfico 2: Todos os dados acumulados (com atualização automática) -----------
 with col_dir:
     st.subheader("📡 Gráfico com Atualização Automática (a cada 10 min)")
-    df_atual = df.copy()
-    if ano_sel != 'TODOS':
-        df_atual = df_atual[df_atual['ano'] == ano_sel]
-    if ocur_sel != 'TODAS':
-        df_atual = df_atual[df_atual['ocorrencia'] == ocur_sel]
-    if redec_sel != 'TODAS':
-        df_atual = df_atual[df_atual['redec'] == redec_sel]
-    freq_atual = df_atual['municipio'].value_counts().reset_index()
+    freq_atual = df['municipio'].value_counts().reset_index()
     freq_atual.columns = ['municipio', 'frequencia']
     fig2 = px.bar(freq_atual, x='municipio', y='frequencia',
                   title="BOs acumulados (dados atualizados)",
                   hover_data=['municipio', 'frequencia'])
     st.plotly_chart(fig2, use_container_width=True)
 
-# ----------- Mapa Interativo com hover corrigido -----------
+# ----------- Mapa Interativo -----------
 st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
+freq_atual['municipio_original'] = freq_atual['municipio'].str.title()
 
-for feature in geojson['features']:
-    nome_mun = feature['properties'].get('NM_MUN', '').upper().strip()
-    freq = freq_atual.set_index('municipio').get('frequencia').get(nome_mun, 0)
-    feature['properties']['frequencia'] = freq
-
-fig_map = px.choropleth_mapbox(
+fig_map = px.choropleth_map(
     freq_atual,
     geojson=geojson,
-    locations='municipio',
+    locations='municipio_original',
     featureidkey="properties.NM_MUN",
     color='frequencia',
     color_continuous_scale="YlOrRd",
-    mapbox_style="carto-positron",
+    scope='south america',
     center={"lat": -22.9, "lon": -43.2},
-    zoom=6,
-    opacity=0.7,
-    hover_name='municipio',
+    hover_name='municipio_original',
     hover_data={'frequencia': True}
 )
 
-fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+fig_map.update_geos(fitbounds="locations", visible=False)
+fig_map.update_traces(
+    hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>'
+)
 st.plotly_chart(fig_map, use_container_width=True)
