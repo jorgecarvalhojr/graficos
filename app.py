@@ -24,14 +24,21 @@ def carregar_dados_ate_corte():
             import io
             import requests
             headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv"}
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=headers, timeout=10, verify=False)
             df = pd.read_csv(io.StringIO(response.text), encoding='latin1')
             break
         except Exception as e:
             st.warning(f"Falha ao ler {url}: {e}")
             continue
+        except Exception as e:
+            st.warning(f"Falha ao ler {url}: {e}")
+            continue
     if df is None:
         st.error("Nenhuma das URLs pôde ser carregada.")
+        return pd.DataFrame()
+
+    if df is None or df.empty:
+        st.error("⚠️ Nenhum dado pôde ser carregado de nenhuma URL.")
         return pd.DataFrame()
 
     df['data_solicitacao'] = pd.to_datetime(df['data_solicitacao'], errors='coerce')
@@ -49,14 +56,21 @@ def carregar_dados_atuais():
             import io
             import requests
             headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv"}
-            response = requests.get(url, headers=headers, timeout=10)
+            response = requests.get(url, headers=headers, timeout=10, verify=False)
             df = pd.read_csv(io.StringIO(response.text), encoding='latin1')
             break
         except Exception as e:
             st.warning(f"Falha ao ler {url}: {e}")
             continue
+        except Exception as e:
+            st.warning(f"Falha ao ler {url}: {e}")
+            continue
     if df is None:
         st.error("Nenhuma das URLs pôde ser carregada.")
+        return pd.DataFrame()
+
+    if df is None or df.empty:
+        st.error("⚠️ Nenhum dado pôde ser carregado de nenhuma URL.")
         return pd.DataFrame()
 
     df['data_solicitacao'] = pd.to_datetime(df['data_solicitacao'], errors='coerce')
