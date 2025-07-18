@@ -12,7 +12,7 @@ st.set_page_config(layout="wide", page_title="Análise de BOs - PRODEC")
 DATA_CORTE_FIXA = pd.to_datetime("2025-07-18")
 CSV_URLS = [
     "https://prodec.defesacivil.rj.gov.br/prodec.csv",
-    "http://prodec.sistematica.info/public/prodec.csv"
+    "https://pronadec.sistematica.info/prodec.csv"
 ]
 
 @st.cache_data
@@ -56,6 +56,9 @@ def carregar_dados_atuais():
 # --- Dados históricos (fixos até 18/07/2025) ---
 st.header("📊 Dados até 18/07/2025 (fixos)")
 df_corte = carregar_dados_ate_corte()
+if df_corte.empty:
+    st.warning("⚠️ Nenhum dado carregado até a data de corte. Verifique a fonte.")
+    st.stop()
 
 # Filtros
 col1, col2, col3 = st.columns(3)
@@ -78,6 +81,9 @@ st.plotly_chart(fig1, use_container_width=True)
 # --- Dados atuais (dinâmicos) ---
 st.header("📈 Dados acumulados atualizados (autoatualiza)")
 df_atual = carregar_dados_atuais()
+if df_atual.empty:
+    st.warning("⚠️ Nenhum dado atualizado foi carregado. Verifique a fonte.")
+    st.stop()
 
 col4, col5, col6 = st.columns(3)
 anos2 = sorted(df_atual['ano'].dropna().unique())
