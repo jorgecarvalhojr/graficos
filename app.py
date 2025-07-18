@@ -1,110 +1,105 @@
-
-import pandas as pd
 import streamlit as st
-import plotly.express as px
-import json
-import io
+import pandas as pd
 import requests
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import json
+import plotly.express as px
+from datetime import datetime
 
-st.set_page_config(layout="wide", page_title="Análise de BOs - PRODEC")
+st.set_page_config(layout="wide")
+st.title("📊 Análise de Frequência de BOs por Município (RJ)")
 
-DATA_CORTE_FIXA = pd.to_datetime("2025-07-18")
-CSV_URLS = [
+URLS = [
     "https://prodec.defesacivil.rj.gov.br/prodec.csv",
     "https://pronadec.sistematica.info/prodec.csv"
 ]
 
 @st.cache_data(ttl=600)
 def carregar_dados():
-    dfs = []
-    for url in CSV_URLS:
+    frames = []
+    for url in URLS:
         try:
-            headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv"}
-            response = requests.get(url, headers=headers, timeout=15, verify=False)
-            response.encoding = "latin1"
-            df = pd.read_csv(io.StringIO(response.text))
-            dfs.append(df)
+            r = requests.get(url, verify=False)
+            if r.status_code == 200:
+                df = pd.read_csv(pd.compat.StringIO(r.text), sep=",")
+                frames.append(df)
         except Exception as e:
-            st.warning(f"⚠️ Falha ao acessar {url}: {e}")
-    if not dfs:
-        st.error("❌ Nenhum dado pôde ser carregado.")
+            st.warning(f"Erro ao carregar {url}: {e}")
+    if not frames:
+        st.error("❌ Nenhum dado foi carregado.")
         return pd.DataFrame()
-    df = pd.concat(dfs, ignore_index=True)
-    df['data_solicitacao'] = pd.to_datetime(df['data_solicitacao'], errors='coerce')
-    df['ano'] = df['data_solicitacao'].dt.year
-    df['ocorrencia'] = df['ocorrencia'].fillna('Não Informada')
-    df['redec'] = df['redec'].fillna('Não Informada')
-    df['municipio'] = df['municipio'].str.upper().str.strip()
-    return df
+    df_total = pd.concat(frames, ignore_index=True)
+    df_total["data_solicitacao"] = pd.to_datetime(df_total["data_solicitacao"], errors="coerce")
+    df_total["ano"] = df_total["data_solicitacao"].dt.year
+    df_total["MUNICIPIO"] = df_total["municipio"].str.upper().str.strip()
+    df_total["REDEC"] = df_total["redec"].str.upper().str.strip()
+    df_total["OCORRENCIA"] = df_total["ocorrencia"].str.upper().str.strip()
+    return df_total
 
 df = carregar_dados()
+
 if df.empty:
     st.stop()
 
-# Filtros no topo
-st.markdown("### Filtros Globais")
+# Filtros Globais
 col1, col2, col3 = st.columns(3)
-anos = sorted(df['ano'].dropna().unique())
-ocorrencias = sorted(df['ocorrencia'].unique())
-redecs = sorted(df['redec'].unique())
-
-with col1:
-    ano_sel = st.selectbox("Ano", ["Todos"] + list(anos), index=0)
-with col2:
-    ocorr_sel = st.selectbox("Ocorrência", ["Todos"] + ocorrencias, index=0)
-with col3:
-    redec_sel = st.selectbox("REDEC", ["Todos"] + redecs, index=0)
+anos = sorted(df["ano"].dropna().unique())
+ano_selecionado = col1.selectbox("Filtrar por Ano", ["TODOS"] + [str(ano) for ano in anos])
+ocorrencias = sorted(df["OCORRENCIA"].dropna().unique())
+ocorrencia_sel = col2.selectbox("Filtrar por Ocorrência", ["TODAS"] + list(ocorrencias))
+redec_opts = sorted(df["REDEC"].dropna().unique())
+redec_sel = col3.selectbox("Filtrar por REDEC", ["TODAS"] + list(redec_opts))
 
 df_filtrado = df.copy()
-if ano_sel != "Todos":
-    df_filtrado = df_filtrado[df_filtrado['ano'] == ano_sel]
-if ocorr_sel != "Todos":
-    df_filtrado = df_filtrado[df_filtrado['ocorrencia'] == ocorr_sel]
-if redec_sel != "Todos":
-    df_filtrado = df_filtrado[df_filtrado['redec'] == redec_sel]
+if ano_selecionado != "TODOS":
+    df_filtrado = df_filtrado[df_filtrado["ano"] == int(ano_selecionado)]
+if ocorrencia_sel != "TODAS":
+    df_filtrado = df_filtrado[df_filtrado["OCORRENCIA"] == ocorrencia_sel]
+if redec_sel != "TODAS":
+    df_filtrado = df_filtrado[df_filtrado["REDEC"] == redec_sel]
 
-# Gráficos lado a lado
-st.markdown("### Frequência de BOs por Município")
+# Gráfico 1: Dados acumulados até 18/07/2025
+corte_data = pd.to_datetime("2025-07-18")
+df_corte = df_filtrado[df_filtrado["data_solicitacao"] <= corte_data]
+acumulado = df_corte["MUNICIPIO"].value_counts().reset_index()
+acumulado.columns = ["MUNICIPIO", "FREQUENCIA"]
 
+# Gráfico 2: Dados completos atualizados
+atualizado = df_filtrado["MUNICIPIO"].value_counts().reset_index()
+atualizado.columns = ["MUNICIPIO", "FREQUENCIA"]
+
+# Exibir gráficos lado a lado
 col1, col2 = st.columns(2)
-
-df_corte = df_filtrado[df_filtrado['data_solicitacao'] <= DATA_CORTE_FIXA]
-dados_corte = df_corte.groupby('municipio').size().reset_index(name='frequencia')
-dados_atual = df_filtrado.groupby('municipio').size().reset_index(name='frequencia')
-
 with col1:
-    st.subheader("📊 Até 18/07/2025")
-    fig1 = px.bar(dados_corte, x='municipio', y='frequencia', color='frequencia',
-                  color_continuous_scale='thermal')
-    fig1.update_layout(xaxis_tickangle=-45, height=400)
+    st.subheader("📌 Acumulado até 18/07/2025")
+    fig1 = px.bar(acumulado, x="MUNICIPIO", y="FREQUENCIA", title="Acumulado até 18/07/2025")
     st.plotly_chart(fig1, use_container_width=True)
 
 with col2:
-    st.subheader("📈 Atualizado")
-    fig2 = px.bar(dados_atual, x='municipio', y='frequencia', color='frequencia',
-                  color_continuous_scale='viridis')
-    fig2.update_layout(xaxis_tickangle=-45, height=400)
+    st.subheader("📡 Atualizações Recentes (Live)")
+    fig2 = px.bar(atualizado, x="MUNICIPIO", y="FREQUENCIA", title="Dados Atualizados")
     st.plotly_chart(fig2, use_container_width=True)
 
-# Mapa abaixo
-st.markdown("### 🗺️ Mapa de Frequência por Município")
+# Carregar GeoJSON
+geojson_url = "https://rj-mapas.s3.amazonaws.com/geojson_rj_municipios_ok.json"
+geojson_data = requests.get(geojson_url).json()
 
-with open("geojson_rj_municipios_isolado.json", "r", encoding="utf-8") as f:
-    geojson_rj = json.load(f)
+# Mapa
+st.subheader("🗺️ Mapa de Frequência de BOs por Município (RJ)")
+df_mapa = df_filtrado["MUNICIPIO"].value_counts().reset_index()
+df_mapa.columns = ["MUNICIPIO", "FREQUENCIA"]
 
 fig_mapa = px.choropleth_mapbox(
-    dados_atual,
-    geojson=geojson_rj,
-    locations='municipio',
-    featureidkey='properties.name',
-    color='frequencia',
-    mapbox_style='carto-positron',
+    df_mapa,
+    geojson=geojson_data,
+    locations="MUNICIPIO",
+    featureidkey="properties.name",
+    color="FREQUENCIA",
+    color_continuous_scale="Reds",
+    mapbox_style="carto-positron",
+    zoom=6,
     center={"lat": -22.9, "lon": -43.3},
-    zoom=6.3,
     opacity=0.7,
-    color_continuous_scale="Reds"
+    title="Frequência de BOs por Município (RJ)"
 )
-fig_mapa.update_layout(margin={"r":0,"t":0,"l":0,"b":0}, height=500)
+
 st.plotly_chart(fig_mapa, use_container_width=True)
