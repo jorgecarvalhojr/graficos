@@ -4,6 +4,7 @@ import requests
 import json
 import plotly.express as px
 from datetime import datetime
+from io import StringIO
 
 st.set_page_config(layout="wide")
 st.title("📊 Análise de Frequência de BOs por Município (RJ)")
@@ -20,7 +21,7 @@ def carregar_dados():
         try:
             r = requests.get(url, verify=False)
             if r.status_code == 200:
-                df = pd.read_csv(pd.compat.StringIO(r.text), sep=",")
+                df = pd.read_csv(StringIO(r.text), sep=",")
                 frames.append(df)
         except Exception as e:
             st.warning(f"Erro ao carregar {url}: {e}")
