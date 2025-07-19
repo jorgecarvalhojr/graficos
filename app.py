@@ -141,11 +141,11 @@ df_todos = pd.DataFrame({'municipio_original': geojson_nomes})
 df_plot = df_todos.merge(freq_atual[['municipio_original', 'frequencia']], on='municipio_original', how='left')
 df_plot['frequencia'] = df_plot['frequencia'].fillna(0)
 
-# 6. (Opcional) Debug: veja o que está sendo plotado
-st.write("Municípios do df_plot:", df_plot['municipio_original'].tolist())
-st.write("Municípios do GeoJSON:", geojson_nomes)
-st.write("Diferença GeoJSON - df_plot:", set(geojson_nomes) - set(df_plot['municipio_original']))
-st.write("Diferença df_plot - GeoJSON:", set(df_plot['municipio_original']) - set(geojson_nomes))
+df_plot['frequencia'] = pd.to_numeric(df_plot['frequencia'], errors='coerce').fillna(0)
+st.write(df_plot.head(20))  # Veja os primeiros valores e tipos!
+st.write(df_plot.dtypes)
+st.write("Min:", df_plot['frequencia'].min(), "Max:", df_plot['frequencia'].max())
+
 
 # 7. Plote o RJ isolado, sem mapa base e sem vizinhos
 fig = px.choropleth(
