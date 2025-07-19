@@ -128,13 +128,9 @@ freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
 freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios_dict)
 
 # 4. Debug: veja se ficou algo sem mapear
-nao_mapeados = freq_atual[freq_atual['municipio_original'].isnull()]
-if not nao_mapeados.empty:
-    st.warning("⚠️ Municípios NÃO mapeados (corrija ou ajuste manualmente):")
-    st.dataframe(nao_mapeados[['municipio', 'municipio_upper']])
-    # Exemplo de patch manual (adicione outros se precisar):
-    freq_atual.loc[freq_atual['municipio_upper'] == "PARATI", "municipio_original"] = "Paraty"
-    # Repita linhas acima para outros casos se aparecerem aqui!
+# Exemplo de patch manual (adicione outros se precisar):
+freq_atual.loc[freq_atual['municipio_upper'] == "PARATI", "municipio_original"] = "Paraty"
+# Repita linhas acima para outros casos se aparecerem aqui!
 
 # 5. Garante todos do RJ no mapa (até os que não têm BO)
 df_todos = pd.DataFrame({'municipio_original': geojson_nomes})
@@ -142,10 +138,6 @@ df_plot = df_todos.merge(freq_atual[['municipio_original', 'frequencia']], on='m
 df_plot['frequencia'] = df_plot['frequencia'].fillna(0)
 
 df_plot['frequencia'] = pd.to_numeric(df_plot['frequencia'], errors='coerce').fillna(0)
-st.write(df_plot.head(20))  # Veja os primeiros valores e tipos!
-st.write(df_plot.dtypes)
-st.write("Min:", df_plot['frequencia'].min(), "Max:", df_plot['frequencia'].max())
-
 
 # 7. Plote o RJ isolado, sem mapa base e sem vizinhos
 fig = px.choropleth(
@@ -154,7 +146,8 @@ fig = px.choropleth(
     locations='municipio_original',
     featureidkey="properties.NM_MUN",
     color='frequencia',
-    color_continuous_scale="YlOrRd",
+    color_continuous_scale="Reds",   # Mais contrastante
+    range_color=(0, df_plot['frequencia'].max()),
     hover_name='municipio_original',
     hover_data=['frequencia'],
 )
