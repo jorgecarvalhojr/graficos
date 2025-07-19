@@ -9,22 +9,11 @@ from datetime import datetime
 import pytz
 import time
 
+from streamlit_autorefresh import st_autorefresh
+
 st.set_page_config(layout="wide")
 
-def auto_refresh(interval=600):
-    st.markdown(
-        f"""
-        <script>
-        function refreshPage() {{
-            window.location.reload();
-        }}
-        setTimeout(refreshPage, {interval * 1000});
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
-auto_refresh(interval=600)
-
+st_autorefresh(interval=600 * 1000, key="datarefresh")
 
 # ----------- Função aprimorada para carregar dados das URLs -----------
 @st.cache_data(ttl=600)
