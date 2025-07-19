@@ -5,13 +5,14 @@ import requests
 from io import StringIO
 import json
 import os
+from datetime import datetime
+import time
 
 st.set_page_config(layout="wide")
-st.title("📊 Frequência de BO por Município (RJ)")
 
 # ----------- Função aprimorada para carregar dados das URLs -----------
 @st.cache_data(ttl=600)
-def carregar_dados():
+def carregar_dados(_timestamp):
     urls = [
         "https://prodec.defesacivil.rj.gov.br/prodec.csv",
         "https://pronadec.sistematica.info/prodec.csv"
@@ -41,10 +42,7 @@ def carregar_dados():
         df['municipio'] = df['municipio'].str.upper().str.strip()
         df['ocorrencia'] = df['ocorrencia'].fillna('NÃO INFORMADA')
         df['redec'] = df['redec'].fillna('NÃO INFORMADA').str.upper().str.strip()
-
-        # Forçar associação dos municípios à REDEC correta em caixa alta
         df.loc[df['municipio'].isin(['DUQUE DE CAXIAS', 'NOVA IGUAÇU']), 'redec'] = 'REDEC 02 - BAIXADA FLUMINENSE'
-
         return df
     return pd.DataFrame()
 
@@ -55,8 +53,10 @@ def carregar_geojson():
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-# ----------- Carregando dados -----------
-df = carregar_dados()
+# ----------- Carregar dados com atualização a cada 10 minutos -----------
+timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+st.title(f"📊 Frequência de Registros por Município (RJ) - Última atualização: {timestamp}")
+df = carregar_dados(timestamp)
 geojson = carregar_geojson()
 
 if df.empty:
@@ -112,22 +112,11 @@ with col_dir:
     st.plotly_chart(fig2, use_container_width=True)
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
-# 1. Monte o dicionário de correspondência automático
 geo_municipios = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
-
-# 2. Gere a coluna para merge (do freq_atual)
 freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
 freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
-
-# 3. Debug: mostre quem ficou NaN (sem correspondência)
-# nao_map = freq_atual[freq_atual['municipio_original'].isna()]['municipio'].unique()
-# if len(nao_map) > 0:
-#     st.warning(f"Municípios não mapeados no GeoJSON: {nao_map}")
-
-# 4. Para os poucos casos especiais, faça replace manual (Paraty, etc.)
 freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
 
-# 5. Agora pode plotar!
 fig_map = px.choropleth_mapbox(
     freq_atual,
     geojson=geojson,
@@ -145,3 +134,17 @@ fig_map = px.choropleth_mapbox(
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
+
+# ----------- Sugestão de melhoria: Adicionar tabela interativa -----------
+st.subheader("📋 Tabela Interativa de Frequência por Município")
+freq_table = freq_atual[['municipio_original', 'frequencia']].rename(columns={'municipio_original': 'Município', 'frequencia': 'Frequência'})
+st.dataframe(freq_table, use_container_width=True, height=300)
+
+# ----------- Sugestão de melhoria: Exportar dados filtrados -----------
+csv = freq_table.to_csv(index=False)
+st.download_button(
+    label="📥 Baixar dados filtrados (CSV)",
+    data=csv,
+    file_name="frequencia_registros_rj.csv",
+    mime="text/csv"
+)
