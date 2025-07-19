@@ -126,14 +126,14 @@ fig_map = px.choropleth_mapbox(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     mapbox_style="white-bg",
-    zoom=4.5,
+    # Removido zoom fixo, ajustado via mapbox_bounds
     opacity=0.6,
     center={"lat": -22.9, "lon": -43.2},
     range_color=[0, freq_atual['frequencia'].max()],
 )
 fig_map.update_layout(
     margin={"r":0,"t":0,"l":0,"b":0},
-    mapbox_bounds={"west": -44.8, "east": -40.9, "south": -23.4, "north": -20.7},
+    mapbox_bounds={"west": -45.5, "east": -40.0, "south": -23.8, "north": -20.0},  # Limites mais amplos para RJ
     showlegend=True,
     mapbox_layers=[
         {
