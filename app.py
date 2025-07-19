@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -165,4 +164,3 @@ st.download_button(
     file_name="frequencia_municipios_rj.csv",
     mime="text/csv"
 )
-```
