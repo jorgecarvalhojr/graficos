@@ -125,7 +125,7 @@ fig_map = px.choropleth_mapbox(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     mapbox_style="white-bg",  # Remove fundo padrão do mapa
-    zoom=6,  # Zoom ajustado para RJ
+    zoom=6.5,  # Zoom reduzido para visão mais ampla do RJ
     opacity=0.6,
     center={"lat": -22.9, "lon": -43.2},  # Centralizado no RJ
     range_color=[0, freq_atual['frequencia'].max()],  # Otimiza escala de cores
@@ -151,8 +151,8 @@ st.plotly_chart(fig_map, use_container_width=True)
 st.subheader("📋 Tabela Interativa de Frequência por Município")
 freq_table = freq_atual[['municipio_original', 'frequencia']].rename(columns={'municipio_original': 'Município', 'frequencia': 'Frequência'})
 freq_table = freq_table.sort_values(by='Município').reset_index(drop=True)  # Ordenar alfabeticamente
-freq_table.index = freq_table.index + 1  # Numeração começando em 1
-freq_table = freq_table.reset_index().rename(columns={'Ordem'})  # Adicionar coluna de ordem
+freq_table['Ordem'] = freq_table.index + 1  # Adicionar coluna de ordem começando em 1
+freq_table = freq_table[['Ordem', 'Município', 'Frequência']]  # Selecionar apenas colunas desejadas
 st.dataframe(freq_table, use_container_width=True, height=300)
 
 # ----------- Exportar dados filtrados -----------
