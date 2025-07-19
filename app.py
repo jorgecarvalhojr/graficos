@@ -128,7 +128,7 @@ fig_map = px.choropleth_mapbox(
     mapbox_style="white-bg",
     zoom=6.5,
     opacity=0.6,
-    center={"lat": -22.9, "lon": -43.8},  # Puxe um pouco para baixo e para esquerda
+    center={"lat": -22.5, "lon": -44},  # Puxe um pouco para baixo e para esquerda
     range_color=[0, freq_atual['frequencia'].max()],
 )
 fig_map.update_layout(
