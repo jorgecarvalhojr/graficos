@@ -7,7 +7,7 @@ from io import StringIO
 import json
 import os
 from datetime import datetime
-import pytz  # Adicionado para fuso horário
+import pytz
 
 st.set_page_config(layout="wide")
 
@@ -116,7 +116,7 @@ with col_dir:
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
 geo_municipios = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
 freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
-freq_atual gelo_municipios)
+freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
 freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
 
 fig_map = px.choropleth_mapbox(
@@ -126,23 +126,23 @@ fig_map = px.choropleth_mapbox(
     featureidkey="properties.NM_MUN",
     color='frequencia',
     color_continuous_scale="YlOrRd",
-    mapbox_style="white-bg",  # Remove fundo padrão do mapa
-    zoom=6,  # Zoom reduzido para visão mais ampla do RJ
+    mapbox_style="white-bg",
+    zoom=6,
     opacity=0.6,
-    center={"lat": -22.9, "lon": -43.2},  # Centralizado no RJ
-    range_color=[0, freq_atual['frequencia'].max()],  # Otimiza escala de cores
+    center={"lat": -22.9, "lon": -43.2},
+    range_color=[0, freq_atual['frequencia'].max()],
 )
 fig_map.update_layout(
     margin={"r":0,"t":0,"l":0,"b":0},
-    mapbox_bounds={"west": -44.8, "east": -40.9, "south": -23.4, "north": -20.7},  # Limites do RJ
+    mapbox_bounds={"west": -44.8, "east": -40.9, "south": -23.4, "north": -20.7},
     showlegend=True,
     mapbox_layers=[
         {
             "sourcetype": "geojson",
             "source": geojson,
             "type": "fill",
-            "color": "rgba(255,255,255,0)",  # Preenchimento transparente para áreas não coloridas
-            "below": "traces"  # Garante que o polígono do RJ seja principal
+            "color": "rgba(255,255,255,0)",
+            "below": "traces"
         }
     ]
 )
@@ -152,9 +152,9 @@ st.plotly_chart(fig_map, use_container_width=True)
 # ----------- Tabela Interativa de Frequência por Município -----------
 st.subheader("📋 Tabela Interativa de Frequência por Município")
 freq_table = freq_atual[['municipio_original', 'frequencia']].rename(columns={'municipio_original': 'Município', 'frequencia': 'Frequência'})
-freq_table = freq_table.sort_values(by='Município').reset_index(drop=True)  # Ordenar alfabeticamente
-freq_table['Ordem'] = freq_table.index + 1  # Adicionar coluna de ordem começando em 1
-freq_table = freq_table[['Ordem', 'Município', 'Frequência']]  # Selecionar apenas colunas desejadas
+freq_table = freq_table.sort_values(by='Município').reset_index(drop=True)
+freq_table['Ordem'] = freq_table.index + 1
+freq_table = freq_table[['Ordem', 'Município', 'Frequência']]
 st.dataframe(freq_table, use_container_width=True, height=300)
 
 # ----------- Exportar dados filtrados -----------
