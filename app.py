@@ -120,23 +120,33 @@ freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
 freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
 freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
 
+# Antes do plot
+assert freq_atual['municipio_original'].isna().sum() == 0, "Há NaN em municipio_original!"
+
+nomes_geojson = set([f['properties']['NM_MUN'] for f in geojson['features']])
+nomes_df = set(freq_atual['municipio_original'])
+assert nomes_df.issubset(nomes_geojson), "Tem nomes no DF que não estão no GeoJSON"
+
+freq_atual['frequencia'] = pd.to_numeric(freq_atual['frequencia'], errors='coerce').fillna(0)
+
+
 # 2. Plot isolando só o polígono do RJ
 fig_map = px.choropleth(
     freq_atual,
-    geojson=geojson,  # GeoJSON completo dos municípios do RJ
+    geojson=geojson,
     locations='municipio_original',
     featureidkey="properties.NM_MUN",
     color='frequencia',
     color_continuous_scale="YlOrRd",
-    projection="mercator",        # Tira o Mapbox e usa o plotly puro
+    projection="mercator",
     opacity=0.8,
     hover_name='municipio_original',
     hover_data=['frequencia']
 )
 
 fig_map.update_geos(
-    fitbounds="locations",        # Centraliza só nos dados do RJ
-    visible=False                 # Remove fundo do mapa
+    fitbounds="locations",
+    visible=False
 )
 
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
