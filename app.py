@@ -40,10 +40,11 @@ def carregar_dados():
         df['ano'] = df['data_solicitacao'].dt.year
         df['municipio'] = df['municipio'].str.upper().str.strip()
         df['ocorrencia'] = df['ocorrencia'].fillna('NÃO INFORMADA')
-        df['redec'] = df['redec'].fillna('NÃO INFORMADA')
-        
-        # Associar municípios específicos à REDEC 02 - Baixada Fluminense
-        df.loc[df['municipio'].isin(['DUQUE DE CAXIAS', 'NOVA IGUAÇU']), 'redec'] = 'REDEC 02 - Baixada Fluminense'
+        df['redec'] = df['redec'].fillna('NÃO INFORMADA').str.upper().str.strip()
+
+        # Forçar associação dos municípios à REDEC correta em caixa alta
+        df.loc[df['municipio'].isin(['DUQUE DE CAXIAS', 'NOVA IGUAÇU']), 'redec'] = 'REDEC 02 - BAIXADA FLUMINENSE'
+
         return df
     return pd.DataFrame()
 
