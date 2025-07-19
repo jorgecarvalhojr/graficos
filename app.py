@@ -112,29 +112,23 @@ with col_dir:
     st.plotly_chart(fig2, use_container_width=True)
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
+
+# Corrige nomes problemáticos
+correcoes = {
+    "PARATI": "PARATY",
+}
+freq_atual['municipio_original'] = freq_atual['municipio'].str.upper().str.strip().replace(correcoes)
+
+# Debug final
+geo_municipios = set([f['properties']['NM_MUN'].upper().strip() for f in geojson['features']])
+dados_municipios = set(freq_atual['municipio_original'].unique())
+st.write("Ainda não mapeados:", sorted(dados_municipios - geo_municipios))
+
+st.write("Freq para Duque de Caxias:", freq_atual[freq_atual['municipio_original'] == "DUQUE DE CAXIAS"])
+st.write("Freq para São João de Meriti:", freq_atual[freq_atual['municipio_original'] == "SÃO JOÃO DE MERITI"])
+
 st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
 freq_atual['municipio_original'] = freq_atual['municipio'].str.title()
-
-
-# 1. Pegue todos os nomes do GeoJSON e dos dados, ambos em caixa alta e strip
-geo_municipios = set([f['properties']['NM_MUN'].upper().strip() for f in geojson['features']])
-dados_municipios = set(freq_atual['municipio'].str.upper().str.strip())
-
-# 2. Mostre os que estão nos dados mas não no geojson
-nao_mapeados = dados_municipios - geo_municipios
-st.write("Municípios nos dados que NÃO estão no GeoJSON:", sorted(nao_mapeados))
-
-# 3. Mostre os que estão no geojson mas não nos dados (para debug)
-st.write("Municípios no GeoJSON que NÃO estão nos dados:", sorted(geo_municipios - dados_municipios))
-
-# 4. Crie a coluna de merge exatamente como está no GeoJSON
-freq_atual['municipio_original'] = freq_atual['municipio'].str.upper().str.strip()
-
-# (Opcional: Exiba exemplo de nomes a serem plotados)
-st.write("Exemplo de municipio_original (dados):", freq_atual['municipio_original'].unique()[:10])
-st.write("Exemplo de NM_MUN (geojson):", list(geo_municipios)[:10])
-
-
 
 fig_map = px.choropleth_mapbox(
     freq_atual,
