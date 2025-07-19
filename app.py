@@ -54,8 +54,8 @@ def carregar_geojson():
         return json.load(f)
 
 # ----------- Carregar dados com atualização a cada 10 minutos -----------
-timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-st.title(f"📊 Frequência de Registros por Município (RJ) - Última atualização: {timestamp}")
+timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+st.title(f"📊 PRODEC - Registros por Município (RJ) - Última atualização: {timestamp}")
 df = carregar_dados(timestamp)
 geojson = carregar_geojson()
 
