@@ -118,40 +118,82 @@ with col_dir:
     st.plotly_chart(fig2, use_container_width=True)
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
-geo_municipios = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
-freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
-freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
-freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
+col_map1, col_map2 = st.columns(2)
 
-fig_map = px.choropleth_mapbox(
-    freq_atual,
-    geojson=geojson,
-    locations='municipio_original',
-    featureidkey="properties.NM_MUN",
-    color='frequencia',
-    color_continuous_scale="YlOrRd",
-    mapbox_style="white-bg",
-    zoom=6.5,
-    opacity=0.6,
-    center={"lat": -22.3, "lon": -43},  # Puxe um pouco para baixo e para esquerda
-    range_color=[0, freq_atual['frequencia'].max()],
-)
-fig_map.update_layout(
-    margin={"r": 40, "t": 40, "l": 40, "b": 0},  # Margens iguais para centralizar
-    showlegend=True,
-    mapbox_layers=[
-        {
-            "sourcetype": "geojson",
-            "source": geojson,
-            "type": "fill",
-            "color": "rgba(255,255,255,0)",
-            "below": "traces"
-        }
-    ],
-    height=500,  # Garanta uma altura confortável para não cortar nada
-)
-fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Registros: %{z}<extra></extra>')
-st.plotly_chart(fig_map, use_container_width=True)
+# --- Mapa 1: Acumulado até 18/07/2025 (fixo) ---
+with col_map1:
+    st.subheader("🗺️ Mapa Acumulado até 18/07/2025")
+    # Prepare para o mapa fixo
+    freq_fixo['municipio_upper'] = freq_fixo['municipio'].str.upper().str.strip()
+    freq_fixo['municipio_original'] = freq_fixo['municipio_upper'].map(geo_municipios)
+    freq_fixo['municipio_original'] = freq_fixo['municipio_original'].fillna(freq_fixo['municipio'].replace({"PARATI": "Paraty"}))
+
+    fig_map_fixo = px.choropleth_mapbox(
+        freq_fixo,
+        geojson=geojson,
+        locations='municipio_original',
+        featureidkey="properties.NM_MUN",
+        color='frequencia',
+        color_continuous_scale="YlOrRd",
+        mapbox_style="white-bg",
+        zoom=6.5,
+        opacity=0.6,
+        center={"lat": -22.3, "lon": -43},
+        range_color=[0, max(freq_fixo['frequencia'].max(), 1)],
+    )
+    fig_map_fixo.update_layout(
+        margin={"r": 20, "t": 40, "l": 20, "b": 0},
+        showlegend=True,
+        mapbox_layers=[
+            {
+                "sourcetype": "geojson",
+                "source": geojson,
+                "type": "fill",
+                "color": "rgba(255,255,255,0)",
+                "below": "traces"
+            }
+        ],
+        height=450,
+    )
+    fig_map_fixo.update_traces(hovertemplate='<b>%{location}</b><br>Registros: %{z}<extra></extra>')
+    st.plotly_chart(fig_map_fixo, use_container_width=True)
+
+# --- Mapa 2: Dinâmico atualizado ---
+with col_map2:
+    st.subheader("🗺️ Mapa com Atualização Automática")
+    freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
+    freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
+    freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
+
+    fig_map_atual = px.choropleth_mapbox(
+        freq_atual,
+        geojson=geojson,
+        locations='municipio_original',
+        featureidkey="properties.NM_MUN",
+        color='frequencia',
+        color_continuous_scale="YlOrRd",
+        mapbox_style="white-bg",
+        zoom=6.5,
+        opacity=0.6,
+        center={"lat": -22.3, "lon": -43},
+        range_color=[0, max(freq_atual['frequencia'].max(), 1)],
+    )
+    fig_map_atual.update_layout(
+        margin={"r": 20, "t": 40, "l": 20, "b": 0},
+        showlegend=True,
+        mapbox_layers=[
+            {
+                "sourcetype": "geojson",
+                "source": geojson,
+                "type": "fill",
+                "color": "rgba(255,255,255,0)",
+                "below": "traces"
+            }
+        ],
+        height=450,
+    )
+    fig_map_atual.update_traces(hovertemplate='<b>%{location}</b><br>Registros: %{z}<extra></extra>')
+    st.plotly_chart(fig_map_atual, use_container_width=True)
 
 # ----------- Tabela Interativa de Frequência por Município -----------
 st.subheader("📋 Tabela Interativa de Registros por Município")
