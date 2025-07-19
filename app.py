@@ -18,10 +18,7 @@ def carregar_dados():
     ]
     frames = []
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
-        "Accept": "text/csv,*/*;q=0.9",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Connection": "keep-alive",
+        "User-Agent": "Mozilla/5.0",
     }
     for url in urls:
         try:
@@ -38,13 +35,11 @@ def carregar_dados():
         df = pd.concat(frames, ignore_index=True)
         df['data_solicitacao'] = pd.to_datetime(df['data_solicitacao'], errors='coerce')
         df['ano'] = df['data_solicitacao'].dt.year
-        df['municipio'] = df['municipio'].str.upper().str.strip()
+        df['municipio'] = df['municipio'].str.strip()
         df['ocorrencia'] = df['ocorrencia'].fillna('NÃO INFORMADA')
         df['redec'] = df['redec'].fillna('NÃO INFORMADA').str.upper().str.strip()
-
         # Forçar associação dos municípios à REDEC correta em caixa alta
-        df.loc[df['municipio'].isin(['DUQUE DE CAXIAS', 'NOVA IGUAÇU']), 'redec'] = 'REDEC 02 - BAIXADA FLUMINENSE'
-
+        df.loc[df['municipio'].str.upper().isin(['DUQUE DE CAXIAS', 'NOVA IGUAÇU']), 'redec'] = 'REDEC 02 - BAIXADA FLUMINENSE'
         return df
     return pd.DataFrame()
 
@@ -84,7 +79,7 @@ if redec_sel != 'TODAS':
 
 st.info(f"Total de Municípios com Dados: {df_filtrado['municipio'].nunique()}")
 
-# ----------- Gráfico 1: Acumulado até 18/07/2025 (fixo) -----------
+# ----------- Gráficos -----------
 col_esq, col_dir = st.columns(2)
 
 with col_esq:
@@ -99,7 +94,6 @@ with col_esq:
                   hover_data=['municipio', 'frequencia'])
     st.plotly_chart(fig1, use_container_width=True)
 
-# ----------- Gráfico 2: Todos os dados acumulados (com atualização automática) -----------
 with col_dir:
     st.subheader("📡 Gráfico com Atualização Automática (a cada 10 min)")
     freq_atual = df_filtrado['municipio'].value_counts().reset_index()
@@ -111,31 +105,27 @@ with col_dir:
                   hover_data=['municipio', 'frequencia'])
     st.plotly_chart(fig2, use_container_width=True)
 
-# ----------- Mapa Interativo ajustado para RJ com filtros -----------
-st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
-freq_atual['municipio_original'] = freq_atual['municipio'].str.title()
+# ----------- Diagnóstico dos nomes do GeoJSON x DataFrame -----------
 
-# --- DEBUG: Diagnóstico dos nomes dos municípios ---
 geo_municipios = sorted([f['properties']['NM_MUN'] for f in geojson['features']])
-st.write("Nome exato no GeoJSON - Duque de Caxias:", [x for x in geo_municipios if "CAXIAS" in x])
-st.write("Nome exato no GeoJSON - São João de Meriti:", [x for x in geo_municipios if "MERITI" in x])
+st.write("Nome exato no GeoJSON - Duque de Caxias:", [x for x in geo_municipios if "Caxias" in x])
+st.write("Nome exato no GeoJSON - São João de Meriti:", [x for x in geo_municipios if "Meriti" in x])
 
-st.write("Nome em freq_atual para Duque de Caxias:", freq_atual.loc[freq_atual['municipio'].str.contains("CAXIAS"), 'municipio'].unique())
-st.write("Nome em freq_atual para São João de Meriti:", freq_atual.loc[freq_atual['municipio'].str.contains("MERITI"), 'municipio'].unique())
+st.write("Nome em freq_atual para Duque de Caxias:", freq_atual.loc[freq_atual['municipio'].str.contains("CAXIAS", case=False), 'municipio'].unique())
+st.write("Nome em freq_atual para São João de Meriti:", freq_atual.loc[freq_atual['municipio'].str.contains("MERITI", case=False), 'municipio'].unique())
 
-# --- Correção cirúrgica do nome para merge perfeito ---
+# ----------- Correção dos nomes para merge -----------
 correcoes = {
-    "DUQUE DE CAXIAS": "Duque de Caxias",           # Use o nome que aparecer na primeira lista!
+    "DUQUE DE CAXIAS": "Duque de Caxias",
     "SÃO JOÃO DE MERITI": "São João de Meriti",
-    "PARATI": "Paraty",  # já identificado anteriormente
+    "PARATI": "Paraty"
 }
-# Cria a coluna de merge usando os nomes corrigidos
 freq_atual['municipio_original'] = freq_atual['municipio'].replace(correcoes)
 
-# --- Debug: Veja se agora está OK ---
 st.write("municipio_original únicos após correção:", freq_atual['municipio_original'].unique())
 
-# --- Plot Mapbox (pode deixar o warning de deprecated, não atrapalha) ---
+# ----------- Mapa Interativo RJ -----------
+
 fig_map = px.choropleth_mapbox(
     freq_atual,
     geojson=geojson,
