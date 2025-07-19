@@ -149,11 +149,11 @@ fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Registros: %{z}<extra
 st.plotly_chart(fig_map, use_container_width=True)
 
 # ----------- Tabela Interativa de Frequência por Município -----------
-st.subheader("📋 Tabela Interativa de Frequência por Município")
-freq_table = freq_atual[['municipio_original', 'frequencia']].rename(columns={'municipio_original': 'Município', 'frequencia': 'Frequência'})
+st.subheader("📋 Tabela Interativa de Registros por Município")
+freq_table = freq_atual[['municipio_original', 'frequencia']].rename(columns={'municipio_original': 'Município', 'frequencia': 'Registros'})
 freq_table = freq_table.sort_values(by='Município').reset_index(drop=True)
 freq_table['Ordem'] = freq_table.index + 1
-freq_table = freq_table[['Ordem', 'Município', 'Frequência']]
+freq_table = freq_table[['Ordem', 'Município', 'Registros']]
 
 # Aplicar CSS para alinhar à esquerda e definir largura
 st.markdown(
