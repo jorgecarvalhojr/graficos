@@ -101,7 +101,7 @@ with col_esq:
 
 # ----------- Gráfico 2: Todos os dados acumulados (com atualização automática) -----------
 with col_dir:
-    st.subheader("📡 Gráfico com Atualização Automática (a cada 10 min)")
+    st.subheader("📡 Gráfico com Atualização Automática")
     freq_atual = df_filtrado['municipio'].value_counts().reset_index()
     freq_atual.columns = ['municipio', 'frequencia']
     total_atual = freq_atual['frequencia'].sum()
