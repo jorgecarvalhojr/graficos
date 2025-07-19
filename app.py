@@ -127,21 +127,31 @@ freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municip
 # 4. Para os poucos casos especiais, faça replace manual (Paraty, etc.)
 freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
 
-# 5. Agora pode plotar!
-fig_map = px.choropleth_mapbox(
+import plotly.express as px
+
+# freq_atual['municipio_original'] deve estar pronto conforme acima
+
+fig = px.choropleth(
     freq_atual,
     geojson=geojson,
     locations='municipio_original',
     featureidkey="properties.NM_MUN",
     color='frequencia',
     color_continuous_scale="YlOrRd",
-    mapbox_style="carto-positron",
-    zoom=6,
-    opacity=0.6,
-    center={"lat": -22.9, "lon": -43.2},
+    scope="south america",  # Garante proporção continente
     hover_name='municipio_original',
-    hover_data=['frequencia']
+    hover_data=['frequencia'],
 )
-fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
-st.plotly_chart(fig_map, use_container_width=True)
+fig.update_geos(
+    fitbounds="locations",  # Ajusta exatamente ao shape do RJ
+    visible=False           # Remove base map, deixando só o polígono do RJ
+)
+fig.update_layout(
+    margin={"r":0,"t":0,"l":0,"b":0},
+    width=1000, height=650
+)
+fig.update_traces(
+    marker_line_width=0.7, marker_line_color='black',
+    hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>'
+)
+st.plotly_chart(fig, use_container_width=True)
