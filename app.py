@@ -124,27 +124,42 @@ fig_map = px.choropleth_mapbox(
     featureidkey="properties.NM_MUN",
     color='frequencia',
     color_continuous_scale="YlOrRd",
-    mapbox_style="carto-positron",
-    zoom=6,
+    mapbox_style="white-bg",  # Remove fundo padrão do mapa
+    zoom=7,  # Zoom ajustado para RJ
     opacity=0.6,
-    center={"lat": -22.9, "lon": -43.2},
-    hover_name='municipio_original',
-    hover_data=['frequencia']
+    center={"lat": -22.9, "lon": -43.2},  # Centralizado no RJ
+    range_color=[0, freq_atual['frequencia'].max()],  # Otimiza escala de cores
 )
-fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+fig_map.update_layout(
+    margin={"r":0,"t":0,"l":0,"b":0},
+    mapbox_bounds={"west": -44.8, "east": -40.9, "south": -23.4, "north": -20.7},  # Limites do RJ
+    showlegend=True,
+    mapbox_layers=[
+        {
+            "sourcetype": "geojson",
+            "source": geojson,
+            "type": "fill",
+            "color": "rgba(255,255,255,0)",  # Preenchimento transparente para áreas não coloridas
+            "below": "traces"  # Garante que o polígono do RJ seja principal
+        }
+    ]
+)
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
 
-# ----------- Sugestão de melhoria: Adicionar tabela interativa -----------
+# ----------- Tabela Interativa de Frequência por Município -----------
 st.subheader("📋 Tabela Interativa de Frequência por Município")
 freq_table = freq_atual[['municipio_original', 'frequencia']].rename(columns={'municipio_original': 'Município', 'frequencia': 'Frequência'})
+freq_table = freq_table.sort_values(by='Município').reset_index(drop=True)  # Ordenar alfabeticamente
+freq_table.index = freq_table.index + 1  # Numeração começando em 1
+freq_table = freq_table.reset_index().rename(columns={'index': 'Ordem'})  # Adicionar coluna de ordem
 st.dataframe(freq_table, use_container_width=True, height=300)
 
-# ----------- Sugestão de melhoria: Exportar dados filtrados -----------
+# ----------- Exportar dados filtrados -----------
 csv = freq_table.to_csv(index=False)
 st.download_button(
     label="📥 Baixar dados filtrados (CSV)",
     data=csv,
-    file_name="frequencia_registros_rj.csv",
+    file_name="frequencia_municipios_rj.csv",
     mime="text/csv"
 )
