@@ -145,7 +145,7 @@ fig_map.update_layout(
     ],
     height=500,  # Garanta uma altura confortável para não cortar nada
 )
-fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
+fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Registros: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
 
 # ----------- Tabela Interativa de Frequência por Município -----------
