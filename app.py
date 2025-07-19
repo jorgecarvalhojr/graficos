@@ -132,7 +132,7 @@ if not nao_mapeados.empty:
 # st.write(freq_atual[['municipio', 'municipio_upper', 'municipio_original']].head())
 
 # 5. Merge para garantir TODOS os municípios do RJ no mapa:
-df_todos = pd.DataFrame({'municipio_original': todos_municipios})
+df_todos = pd.DataFrame({'municipio_original': geojson_muns})
 df_plot = df_todos.merge(
     freq_atual[['municipio_original', 'frequencia']],
     on='municipio_original',
