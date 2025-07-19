@@ -113,7 +113,8 @@ with col_dir:
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
 st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
-freq_atual['municipio_original'] = freq_atual['municipio'].str.title()
+# Mapeamento garantido: caixa alta, sem acento removido, igual ao GeoJSON
+freq_atual['municipio_original'] = freq_atual['municipio'].str.upper().str.strip()
 
 fig_map = px.choropleth_mapbox(
     freq_atual,
@@ -129,7 +130,6 @@ fig_map = px.choropleth_mapbox(
     hover_name='municipio_original',
     hover_data=['frequencia']
 )
-
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
