@@ -112,24 +112,30 @@ with col_dir:
     st.plotly_chart(fig2, use_container_width=True)
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
-
-# Corrige nomes problemáticos
-correcoes = {
-    "PARATI": "PARATY",
-}
-freq_atual['municipio_original'] = freq_atual['municipio'].str.upper().str.strip().replace(correcoes)
-
-# Debug final
-geo_municipios = set([f['properties']['NM_MUN'].upper().strip() for f in geojson['features']])
-dados_municipios = set(freq_atual['municipio_original'].unique())
-st.write("Ainda não mapeados:", sorted(dados_municipios - geo_municipios))
-
-st.write("Freq para Duque de Caxias:", freq_atual[freq_atual['municipio_original'] == "DUQUE DE CAXIAS"])
-st.write("Freq para São João de Meriti:", freq_atual[freq_atual['municipio_original'] == "SÃO JOÃO DE MERITI"])
-
 st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
 freq_atual['municipio_original'] = freq_atual['municipio'].str.title()
 
+# --- DEBUG: Diagnóstico dos nomes dos municípios ---
+geo_municipios = sorted([f['properties']['NM_MUN'] for f in geojson['features']])
+st.write("Nome exato no GeoJSON - Duque de Caxias:", [x for x in geo_municipios if "CAXIAS" in x])
+st.write("Nome exato no GeoJSON - São João de Meriti:", [x for x in geo_municipios if "MERITI" in x])
+
+st.write("Nome em freq_atual para Duque de Caxias:", freq_atual.loc[freq_atual['municipio'].str.contains("CAXIAS"), 'municipio'].unique())
+st.write("Nome em freq_atual para São João de Meriti:", freq_atual.loc[freq_atual['municipio'].str.contains("MERITI"), 'municipio'].unique())
+
+# --- Correção cirúrgica do nome para merge perfeito ---
+correcoes = {
+    "DUQUE DE CAXIAS": "Duque de Caxias",           # Use o nome que aparecer na primeira lista!
+    "SÃO JOÃO DE MERITI": "São João de Meriti",
+    "PARATI": "Paraty",  # já identificado anteriormente
+}
+# Cria a coluna de merge usando os nomes corrigidos
+freq_atual['municipio_original'] = freq_atual['municipio'].replace(correcoes)
+
+# --- Debug: Veja se agora está OK ---
+st.write("municipio_original únicos após correção:", freq_atual['municipio_original'].unique())
+
+# --- Plot Mapbox (pode deixar o warning de deprecated, não atrapalha) ---
 fig_map = px.choropleth_mapbox(
     freq_atual,
     geojson=geojson,
@@ -144,7 +150,6 @@ fig_map = px.choropleth_mapbox(
     hover_name='municipio_original',
     hover_data=['frequencia']
 )
-
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
