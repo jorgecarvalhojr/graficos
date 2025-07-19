@@ -112,18 +112,22 @@ with col_dir:
     st.plotly_chart(fig2, use_container_width=True)
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
-st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
-# Padroniza igual ao GeoJSON: Title Case com acentos, exceto onde forçar é necessário
-freq_atual['municipio_original'] = freq_atual['municipio'].str.title().str.strip()
+# 1. Monte o dicionário de correspondência automático
+geo_municipios = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
 
-# Só corrige os realmente problemáticos depois de padronizar todo mundo
-correcoes = {
-    "Parati": "Paraty",  # Se for necessário
-    # Adicione outros se encontrar divergências reais
-}
-freq_atual['municipio_original'] = freq_atual['municipio_original'].replace(correcoes)
-# ----------- Mapa Interativo RJ -----------
+# 2. Gere a coluna para merge (do freq_atual)
+freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
+freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
 
+# 3. Debug: mostre quem ficou NaN (sem correspondência)
+nao_map = freq_atual[freq_atual['municipio_original'].isna()]['municipio'].unique()
+if len(nao_map) > 0:
+    st.warning(f"Municípios não mapeados no GeoJSON: {nao_map}")
+
+# 4. Para os poucos casos especiais, faça replace manual (Paraty, etc.)
+freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
+
+# 5. Agora pode plotar!
 fig_map = px.choropleth_mapbox(
     freq_atual,
     geojson=geojson,
@@ -138,7 +142,6 @@ fig_map = px.choropleth_mapbox(
     hover_name='municipio_original',
     hover_data=['frequencia']
 )
-
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
