@@ -107,23 +107,15 @@ with col_dir:
 
 # ----------- Diagnóstico dos nomes do GeoJSON x DataFrame -----------
 
-geo_municipios = sorted([f['properties']['NM_MUN'] for f in geojson['features']])
-st.write("Nome exato no GeoJSON - Duque de Caxias:", [x for x in geo_municipios if "Caxias" in x])
-st.write("Nome exato no GeoJSON - São João de Meriti:", [x for x in geo_municipios if "Meriti" in x])
+# Padroniza igual ao GeoJSON: Title Case com acentos, exceto onde forçar é necessário
+freq_atual['municipio_original'] = freq_atual['municipio'].str.title().str.strip()
 
-st.write("Nome em freq_atual para Duque de Caxias:", freq_atual.loc[freq_atual['municipio'].str.contains("CAXIAS", case=False), 'municipio'].unique())
-st.write("Nome em freq_atual para São João de Meriti:", freq_atual.loc[freq_atual['municipio'].str.contains("MERITI", case=False), 'municipio'].unique())
-
-# ----------- Correção dos nomes para merge -----------
+# Só corrige os realmente problemáticos depois de padronizar todo mundo
 correcoes = {
-    "DUQUE DE CAXIAS": "Duque de Caxias",
-    "SÃO JOÃO DE MERITI": "São João de Meriti",
-    "PARATI": "Paraty"
+    "Parati": "Paraty",  # Se for necessário
+    # Adicione outros se encontrar divergências reais
 }
-freq_atual['municipio_original'] = freq_atual['municipio'].replace(correcoes)
-
-st.write("municipio_original únicos após correção:", freq_atual['municipio_original'].unique())
-
+freq_atual['municipio_original'] = freq_atual['municipio_original'].replace(correcoes)
 # ----------- Mapa Interativo RJ -----------
 
 fig_map = px.choropleth_mapbox(
