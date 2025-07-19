@@ -126,7 +126,7 @@ fig_map = px.choropleth_mapbox(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     mapbox_style="white-bg",
-    zoom=5.5,  # Zoom reduzido para visão mais ampla
+    zoom=4.5,
     opacity=0.6,
     center={"lat": -22.9, "lon": -43.2},
     range_color=[0, freq_atual['frequencia'].max()],
@@ -154,7 +154,22 @@ freq_table = freq_atual[['municipio_original', 'frequencia']].rename(columns={'m
 freq_table = freq_table.sort_values(by='Município').reset_index(drop=True)
 freq_table['Ordem'] = freq_table.index + 1
 freq_table = freq_table[['Ordem', 'Município', 'Frequência']]
-st.dataframe(freq_table, use_container_width=True, height=300, hide_index=True)
+
+# Aplicar CSS para alinhar à esquerda e definir largura
+st.markdown(
+    """
+    <style>
+    .css-1aumxhk {
+        width: 25% !important;
+    }
+    .css-1aumxhk table {
+        text-align: left !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+st.dataframe(freq_table, use_container_width=False, width=300, hide_index=True)
 
 # ----------- Exportar dados filtrados -----------
 csv = freq_table.to_csv(index=False)
