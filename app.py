@@ -126,13 +126,13 @@ fig_map = px.choropleth_mapbox(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     mapbox_style="white-bg",
-    zoom=7,  # Zoom ajustado para 7 como solicitado
+    zoom=6.5,
     opacity=0.6,
-    center={"lat": -22.9, "lon": -43.2},  # Centro mantido
+    center={"lat": -22.9, "lon": -43.2},
     range_color=[0, freq_atual['frequencia'].max()],
 )
 fig_map.update_layout(
-    margin={"r": 50, "t": 0, "l": 50, "b": 0},  # Ajuste de margens para centralizar
+    margin={"r": 50, "t": 50, "l": 50, "b": 0},  # Aumentada margem superior para evitar corte
     showlegend=True,
     mapbox_layers=[
         {
