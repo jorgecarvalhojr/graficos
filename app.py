@@ -5,8 +5,6 @@ import requests
 from io import StringIO
 import json
 import os
-from unidecode import unidecode
-
 
 st.set_page_config(layout="wide")
 st.title("📊 Frequência de BO por Município (RJ)")
@@ -114,54 +112,36 @@ with col_dir:
     st.plotly_chart(fig2, use_container_width=True)
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
-# --- Carregue freq_atual e geojson como já faz normalmente acima ---
+# 1. Monte o dicionário de correspondência automático
+geo_municipios = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
 
-# 1. Pegue os nomes dos municípios do GeoJSON
-geojson_nomes = [f['properties']['NM_MUN'] for f in geojson['features']]
-geojson_nomes_upper = [n.upper().strip() for n in geojson_nomes]
-geo_municipios_dict = dict(zip(geojson_nomes_upper, geojson_nomes))
-
-# 2. Padronize os nomes no freq_atual
+# 2. Gere a coluna para merge (do freq_atual)
 freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
+freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
 
-# 3. Mapeie para os nomes exatos do GeoJSON
-freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios_dict)
+# 3. Debug: mostre quem ficou NaN (sem correspondência)
+# nao_map = freq_atual[freq_atual['municipio_original'].isna()]['municipio'].unique()
+# if len(nao_map) > 0:
+#     st.warning(f"Municípios não mapeados no GeoJSON: {nao_map}")
 
-# 4. Debug: veja se ficou algo sem mapear
-# Exemplo de patch manual (adicione outros se precisar):
-freq_atual.loc[freq_atual['municipio_upper'] == "PARATI", "municipio_original"] = "Paraty"
-# Repita linhas acima para outros casos se aparecerem aqui!
+# 4. Para os poucos casos especiais, faça replace manual (Paraty, etc.)
+freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
 
-# 5. Garante todos do RJ no mapa (até os que não têm BO)
-df_todos = pd.DataFrame({'municipio_original': geojson_nomes})
-df_plot = df_todos.merge(freq_atual[['municipio_original', 'frequencia']], on='municipio_original', how='left')
-df_plot['frequencia'] = df_plot['frequencia'].fillna(0)
-
-df_plot['frequencia'] = pd.to_numeric(df_plot['frequencia'], errors='coerce').fillna(0)
-
-# 7. Plote o RJ isolado, sem mapa base e sem vizinhos
-fig = px.choropleth(
-    df_plot,
+# 5. Agora pode plotar!
+fig_map = px.choropleth_mapbox(
+    freq_atual,
     geojson=geojson,
     locations='municipio_original',
     featureidkey="properties.NM_MUN",
     color='frequencia',
-    color_continuous_scale="Reds",   # Mais contrastante
-    range_color=(0, df_plot['frequencia'].max()),
+    color_continuous_scale="YlOrRd",
+    mapbox_style="carto-positron",
+    zoom=6,
+    opacity=0.6,
+    center={"lat": -22.9, "lon": -43.2},
     hover_name='municipio_original',
-    hover_data=['frequencia'],
+    hover_data=['frequencia']
 )
-fig.update_geos(
-    fitbounds="locations",
-    visible=False  # Remove mapa base, fica só o shape do RJ
-)
-fig.update_layout(
-    margin={"r":0,"t":0,"l":0,"b":0},
-    width=800, height=700
-)
-fig.update_traces(
-    marker_line_width=0.7, marker_line_color='black',
-    hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>'
-)
-st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
-st.plotly_chart(fig, use_container_width=True)
+fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
+st.plotly_chart(fig_map, use_container_width=True)
