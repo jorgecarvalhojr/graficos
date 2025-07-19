@@ -160,7 +160,7 @@ st.markdown(
     """
     <style>
     .css-1aumxhk {
-        width: 25% !important;
+        width: 35% !important;
     }
     .css-1aumxhk table {
         text-align: left !important;
