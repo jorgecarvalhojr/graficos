@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -6,7 +7,7 @@ from io import StringIO
 import json
 import os
 from datetime import datetime
-import time
+import pytz  # Adicionado para fuso horário
 
 st.set_page_config(layout="wide")
 
@@ -54,7 +55,8 @@ def carregar_geojson():
         return json.load(f)
 
 # ----------- Carregar dados com atualização a cada 10 minutos -----------
-timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+brasilia_tz = pytz.timezone('America/Sao_Paulo')
+timestamp = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M:%S")
 st.title(f"📊 PRODEC - Registros por Município (RJ) - Última atualização: {timestamp}")
 df = carregar_dados(timestamp)
 geojson = carregar_geojson()
@@ -114,7 +116,7 @@ with col_dir:
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
 geo_municipios = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
 freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
-freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
+freq_atual gelo_municipios)
 freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
 
 fig_map = px.choropleth_mapbox(
@@ -125,7 +127,7 @@ fig_map = px.choropleth_mapbox(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     mapbox_style="white-bg",  # Remove fundo padrão do mapa
-    zoom=6.5,  # Zoom reduzido para visão mais ampla do RJ
+    zoom=6,  # Zoom reduzido para visão mais ampla do RJ
     opacity=0.6,
     center={"lat": -22.9, "lon": -43.2},  # Centralizado no RJ
     range_color=[0, freq_atual['frequencia'].max()],  # Otimiza escala de cores
@@ -163,3 +165,4 @@ st.download_button(
     file_name="frequencia_municipios_rj.csv",
     mime="text/csv"
 )
+```
