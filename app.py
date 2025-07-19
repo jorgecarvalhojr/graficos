@@ -120,9 +120,9 @@ freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
 freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
 
 # 3. Debug: mostre quem ficou NaN (sem correspondência)
-nao_map = freq_atual[freq_atual['municipio_original'].isna()]['municipio'].unique()
-if len(nao_map) > 0:
-    st.warning(f"Municípios não mapeados no GeoJSON: {nao_map}")
+# nao_map = freq_atual[freq_atual['municipio_original'].isna()]['municipio'].unique()
+# if len(nao_map) > 0:
+#     st.warning(f"Municípios não mapeados no GeoJSON: {nao_map}")
 
 # 4. Para os poucos casos especiais, faça replace manual (Paraty, etc.)
 freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
@@ -136,7 +136,7 @@ fig_map = px.choropleth_mapbox(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     mapbox_style="carto-positron",
-    zoom=7,
+    zoom=6,
     opacity=0.6,
     center={"lat": -22.9, "lon": -43.2},
     hover_name='municipio_original',
