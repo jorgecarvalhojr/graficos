@@ -128,7 +128,7 @@ freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municip
 freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(freq_atual['municipio'].replace({"PARATI": "Paraty"}))
 
 # 5. Agora pode plotar!
-fig_map = px.choropleth_mapbox(
+fig_map = px.choropleth(
     freq_atual,
     geojson=geojson,
     locations='municipio_original',
