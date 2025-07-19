@@ -132,7 +132,7 @@ fig_map = px.choropleth_mapbox(
     range_color=[0, freq_atual['frequencia'].max()],
 )
 fig_map.update_layout(
-    margin={"r": 40, "t": 40, "l": 40, "b": 5},  # Margens iguais para centralizar
+    margin={"r": 40, "t": 40, "l": 40, "b": 0},  # Margens iguais para centralizar
     showlegend=True,
     mapbox_layers=[
         {
