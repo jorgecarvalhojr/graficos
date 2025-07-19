@@ -113,6 +113,7 @@ with col_dir:
     st.plotly_chart(fig2, use_container_width=True)
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
+# ----------- Mapa Interativo ajustado para RJ com filtros -----------
 geo_municipios = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
 freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
 freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios)
@@ -126,13 +127,13 @@ fig_map = px.choropleth_mapbox(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     mapbox_style="white-bg",
-    zoom=6.5,  # Zoom ajustado para 6.5
+    zoom=6.5,
     opacity=0.6,
-    center={"lat": -23.0, "lon": -43.2},  # Latitude reduzida para mover mapa para baixo
+    center={"lat": -23.2, "lon": -43.5},  # Deslocado mais para baixo e para a esquerda
     range_color=[0, freq_atual['frequencia'].max()],
 )
 fig_map.update_layout(
-    margin={"r": 50, "t": 70, "l": 50, "b": 0},  # Margem superior aumentada para evitar corte
+    margin={"r": 50, "t": 80, "l": 70, "b": 0},  # Ajuste de margens para posicionamento
     showlegend=True,
     mapbox_layers=[
         {
@@ -146,6 +147,7 @@ fig_map.update_layout(
 )
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
+
 
 # ----------- Tabela Interativa de Frequência por Município -----------
 st.subheader("📋 Tabela Interativa de Frequência por Município")
