@@ -143,7 +143,7 @@ fig_map.update_layout(
             "below": "traces"
         }
     ],
-    height=620,  # Garanta uma altura confortável para não cortar nada
+    height=590,  # Garanta uma altura confortável para não cortar nada
 )
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
