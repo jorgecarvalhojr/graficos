@@ -150,6 +150,13 @@ df_plot = df_todos.merge(
 )
 df_plot['frequencia'] = df_plot['frequencia'].fillna(0)
 
+st.write("Primeiras linhas do df_plot:")
+st.dataframe(df_plot.head(20))
+
+st.write("Municípios com BO > 0:")
+st.dataframe(df_plot[df_plot['frequencia'] > 0])
+
+
 # 6. Plote o RJ isolado:
 fig = px.choropleth(
     df_plot,
