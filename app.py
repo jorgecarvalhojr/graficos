@@ -126,14 +126,13 @@ fig_map = px.choropleth_mapbox(
     color='frequencia',
     color_continuous_scale="YlOrRd",
     mapbox_style="white-bg",
-    # Removido zoom fixo, ajustado via mapbox_bounds
+    zoom=4,  # Reduzido para 4 para visão mais ampla
     opacity=0.6,
     center={"lat": -22.9, "lon": -43.2},
     range_color=[0, freq_atual['frequencia'].max()],
 )
 fig_map.update_layout(
     margin={"r":0,"t":0,"l":0,"b":0},
-    mapbox_bounds={"west": -45.5, "east": -40.0, "south": -23.8, "north": -20.0},  # Limites mais amplos para RJ
     showlegend=True,
     mapbox_layers=[
         {
@@ -160,7 +159,7 @@ st.markdown(
     """
     <style>
     .css-1aumxhk {
-        width: 35% !important;
+        width: 40% !important;
     }
     .css-1aumxhk table {
         text-align: left !important;
@@ -169,7 +168,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-st.dataframe(freq_table, use_container_width=False, width=300, hide_index=True)
+st.dataframe(freq_table, use_container_width=False, width=400, hide_index=True)
 
 # ----------- Exportar dados filtrados -----------
 csv = freq_table.to_csv(index=False)
