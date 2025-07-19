@@ -18,7 +18,10 @@ def carregar_dados():
     ]
     frames = []
     headers = {
-        "User-Agent": "Mozilla/5.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+        "Accept": "text/csv,*/*;q=0.9",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Connection": "keep-alive",
     }
     for url in urls:
         try:
@@ -35,11 +38,13 @@ def carregar_dados():
         df = pd.concat(frames, ignore_index=True)
         df['data_solicitacao'] = pd.to_datetime(df['data_solicitacao'], errors='coerce')
         df['ano'] = df['data_solicitacao'].dt.year
-        df['municipio'] = df['municipio'].str.strip()
+        df['municipio'] = df['municipio'].str.upper().str.strip()
         df['ocorrencia'] = df['ocorrencia'].fillna('NÃO INFORMADA')
         df['redec'] = df['redec'].fillna('NÃO INFORMADA').str.upper().str.strip()
+
         # Forçar associação dos municípios à REDEC correta em caixa alta
-        df.loc[df['municipio'].str.upper().isin(['DUQUE DE CAXIAS', 'NOVA IGUAÇU']), 'redec'] = 'REDEC 02 - BAIXADA FLUMINENSE'
+        df.loc[df['municipio'].isin(['DUQUE DE CAXIAS', 'NOVA IGUAÇU']), 'redec'] = 'REDEC 02 - BAIXADA FLUMINENSE'
+
         return df
     return pd.DataFrame()
 
@@ -79,7 +84,7 @@ if redec_sel != 'TODAS':
 
 st.info(f"Total de Municípios com Dados: {df_filtrado['municipio'].nunique()}")
 
-# ----------- Gráficos -----------
+# ----------- Gráfico 1: Acumulado até 18/07/2025 (fixo) -----------
 col_esq, col_dir = st.columns(2)
 
 with col_esq:
@@ -94,6 +99,7 @@ with col_esq:
                   hover_data=['municipio', 'frequencia'])
     st.plotly_chart(fig1, use_container_width=True)
 
+# ----------- Gráfico 2: Todos os dados acumulados (com atualização automática) -----------
 with col_dir:
     st.subheader("📡 Gráfico com Atualização Automática (a cada 10 min)")
     freq_atual = df_filtrado['municipio'].value_counts().reset_index()
@@ -105,8 +111,8 @@ with col_dir:
                   hover_data=['municipio', 'frequencia'])
     st.plotly_chart(fig2, use_container_width=True)
 
-# ----------- Diagnóstico dos nomes do GeoJSON x DataFrame -----------
-
+# ----------- Mapa Interativo ajustado para RJ com filtros -----------
+st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
 # Padroniza igual ao GeoJSON: Title Case com acentos, exceto onde forçar é necessário
 freq_atual['municipio_original'] = freq_atual['municipio'].str.title().str.strip()
 
@@ -132,6 +138,7 @@ fig_map = px.choropleth_mapbox(
     hover_name='municipio_original',
     hover_data=['frequencia']
 )
+
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
