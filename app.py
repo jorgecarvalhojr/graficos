@@ -64,6 +64,8 @@ timestamp = datetime.now(brasilia_tz).strftime("%d/%m/%Y %H:%M:%S")
 st.title(f"📊 PRODEC - Registros por Município (RJ) - Última atualização: {timestamp}")
 df = carregar_dados(timestamp)
 geojson = carregar_geojson()
+geo_municipios = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
+
 
 if df.empty:
     st.error("❌ Não foi possível carregar dados.")
