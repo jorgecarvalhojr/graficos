@@ -10,7 +10,7 @@ import pytz
 import time
 
 def auto_refresh(interval=600):
-    st.experimental_set_query_params(_=int(time.time() // interval))
+    st.query_params["_"] = int(time.time() // interval)
 auto_refresh(interval=600)
 
 st.set_page_config(layout="wide")
