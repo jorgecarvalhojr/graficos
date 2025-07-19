@@ -115,28 +115,18 @@ with col_dir:
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
 st.set_page_config(layout="wide")
 
-# Carregue seus dados e geojson conforme seu fluxo já testado:
-# df = carregar_dados() # Sua função de carregamento e filtro
-# geojson = carregar_geojson() # Sua função de carregamento do geojson
+geojson_muns = [f['properties']['NM_MUN'] for f in geojson['features']]
+geojson_upper = [n.upper() for n in geojson_muns]
+geo_municipios_dict = dict(zip(geojson_upper, geojson_muns))
 
-# --- Pegue os nomes dos municípios no geojson e crie o dicionário uppercase:proper ---
-geo_municipios_dict = {f['properties']['NM_MUN'].upper(): f['properties']['NM_MUN'] for f in geojson['features']}
-todos_municipios = list(geo_municipios_dict.values())
-
-# --- Prepare freq_atual a partir do seu DataFrame filtrado ---
-# Exemplo: freq_atual = df['municipio'].value_counts().reset_index()
-# freq_atual.columns = ['municipio', 'frequencia']
-
-# 1. Crie a coluna 'municipio_upper' padronizada em caixa alta
 freq_atual['municipio_upper'] = freq_atual['municipio'].str.upper().str.strip()
-
-# 2. Use o dicionário para criar municipio_original igual ao GeoJSON
 freq_atual['municipio_original'] = freq_atual['municipio_upper'].map(geo_municipios_dict)
 
-# 3. Trate Paraty (caso ainda venha como PARATI no seu CSV)
-freq_atual['municipio_original'] = freq_atual['municipio_original'].fillna(
-    freq_atual['municipio_upper'].replace({"PARATI": "Paraty"})
-)
+# DEBUG: veja quais municípios não foram mapeados:
+nao_mapeados = freq_atual[freq_atual['municipio_original'].isna()]
+if not nao_mapeados.empty:
+    st.warning("Municípios NÃO mapeados:")
+    st.dataframe(nao_mapeados[['municipio', 'municipio_upper']])
 
 # 4. Debug opcional:
 # st.write(freq_atual[['municipio', 'municipio_upper', 'municipio_original']].head())
@@ -149,13 +139,6 @@ df_plot = df_todos.merge(
     how='left'
 )
 df_plot['frequencia'] = df_plot['frequencia'].fillna(0)
-
-st.write("Primeiras linhas do df_plot:")
-st.dataframe(df_plot.head(20))
-
-st.write("Municípios com BO > 0:")
-st.dataframe(df_plot[df_plot['frequencia'] > 0])
-
 
 # 6. Plote o RJ isolado:
 fig = px.choropleth(
