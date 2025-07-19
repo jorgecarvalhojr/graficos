@@ -113,8 +113,28 @@ with col_dir:
 
 # ----------- Mapa Interativo ajustado para RJ com filtros -----------
 st.subheader("🗺️ Mapa Interativo de Frequência por Município (RJ)")
-# Mapeamento garantido: caixa alta, sem acento removido, igual ao GeoJSON
+freq_atual['municipio_original'] = freq_atual['municipio'].str.title()
+
+
+# 1. Pegue todos os nomes do GeoJSON e dos dados, ambos em caixa alta e strip
+geo_municipios = set([f['properties']['NM_MUN'].upper().strip() for f in geojson['features']])
+dados_municipios = set(freq_atual['municipio'].str.upper().str.strip())
+
+# 2. Mostre os que estão nos dados mas não no geojson
+nao_mapeados = dados_municipios - geo_municipios
+st.write("Municípios nos dados que NÃO estão no GeoJSON:", sorted(nao_mapeados))
+
+# 3. Mostre os que estão no geojson mas não nos dados (para debug)
+st.write("Municípios no GeoJSON que NÃO estão nos dados:", sorted(geo_municipios - dados_municipios))
+
+# 4. Crie a coluna de merge exatamente como está no GeoJSON
 freq_atual['municipio_original'] = freq_atual['municipio'].str.upper().str.strip()
+
+# (Opcional: Exiba exemplo de nomes a serem plotados)
+st.write("Exemplo de municipio_original (dados):", freq_atual['municipio_original'].unique()[:10])
+st.write("Exemplo de NM_MUN (geojson):", list(geo_municipios)[:10])
+
+
 
 fig_map = px.choropleth_mapbox(
     freq_atual,
@@ -130,6 +150,7 @@ fig_map = px.choropleth_mapbox(
     hover_name='municipio_original',
     hover_data=['frequencia']
 )
+
 fig_map.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig_map.update_traces(hovertemplate='<b>%{location}</b><br>Frequência: %{z}<extra></extra>')
 st.plotly_chart(fig_map, use_container_width=True)
