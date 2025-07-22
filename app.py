@@ -158,7 +158,7 @@ with col_map1:
         height=450,
     )
     fig_map_fixo.update_traces(hovertemplate='<b>%{location}</b><br>Registros: %{z}<extra></extra>')
-    st.plotly_chart(fig_map_fixo, use_container_width=True)
+    st.plotly_chart(fig_map_fixo, use_container_width=True, key="map_fixo")
 
 # --- Mapa 2: Dinâmico atualizado ---
 with col_map2:
@@ -195,7 +195,7 @@ with col_map2:
         height=450,
     )
     fig_map_atual.update_traces(hovertemplate='<b>%{location}</b><br>Registros: %{z}<extra></extra>')
-    st.plotly_chart(fig_map_atual, use_container_width=True)
+    st.plotly_chart(fig_map_atual, use_container_width=True, key="map_atual")
 
 # ----------- Tabela Interativa de Frequência por Município -----------
 st.subheader("📋 Tabela Interativa de Registros por Município")
