@@ -78,15 +78,15 @@ redec_opts = ['TODAS'] + sorted(df['redec'].unique())
 
 col1, col2, col3 = st.columns(3)
 ano_sel = col1.selectbox("Filtrar por Ano", anos)
-ocur_sel = col2.selectbox("Filtrar por Ocorrência", ocorrencias)
+ocur_sel = col2.multiselect("Filtrar por Ocorrência", ocorrencias, default=["TODAS"])
 redec_sel = col3.selectbox("Filtrar por REDEC", redec_opts)
 
 # ----------- Aplicando filtros -----------
 df_filtrado = df.copy()
 if ano_sel != 'TODOS':
     df_filtrado = df_filtrado[df_filtrado['ano'] == ano_sel]
-if ocur_sel != 'TODAS':
-    df_filtrado = df_filtrado[df_filtrado['ocorrencia'] == ocur_sel]
+if "TODAS" not in ocur_sel:
+    df_filtrado = df_filtrado[df_filtrado['ocorrencia'].isin(ocur_sel)]
 if redec_sel != 'TODAS':
     df_filtrado = df_filtrado[df_filtrado['redec'] == redec_sel]
 
